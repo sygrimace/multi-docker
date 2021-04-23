@@ -1,0 +1,30 @@
+language: generic 
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t sygrimace/react-test -f ./client/Dockerfile.dev ./client
+  
+
+script:
+  - docker run -e CI=true sygrimace/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t sygrimace/multi-client ./client
+  - docker build -t sygrimace/multi-nginx ./nginx
+  - docker build -t sygrimace/multi-server ./server
+  - docker build -t sygrimace/multi-worker ./worker
+
+  #log into the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  #take those images and push them to docker hub
+  - docker push sygrimace/multi-client
+  - docker push sygrimace/multi-nginx 
+  - docker push sygrimace/multi-server
+  - docker push sygrimace/multi-worker 
+
+
+
+
